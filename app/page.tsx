@@ -1120,6 +1120,7 @@ export default function Page() {
     { l:"Cases",     href:"#cases" },
     { l:"Materiais", href:"#iscas" },
     { l:"Contato",   href:"#contato" },
+    {l:"Calculadora-ROI", href:"/calculadora-roi"}
   ];
 
   return (
