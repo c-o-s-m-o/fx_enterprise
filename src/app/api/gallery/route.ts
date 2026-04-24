@@ -2,12 +2,8 @@
 import { NextResponse } from 'next/server';
 
 export async function GET() {
-  const apiKey = process.env.GOOGLE_API_KEY;
-  const folderId = process.env.GOOGLE_DRIVE_GALLERY_FOLDER_ID;
-
-  if (!apiKey || !folderId) {
-    return NextResponse.json({ error: 'Configuração incompleta no servidor.' }, { status: 500 });
-  }
+  console.log('### KEY:', process.env.GOOGLE_API_KEY ? 'existe' : 'faltando');
+  console.log('### FOLDER:', process.env.GOOGLE_DRIVE_GALLERY_FOLDER_ID ? 'existe' : 'faltando');
 
   const url = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+(mimeType+contains+'image/'+or+mimeType+contains+'video/')+and+trashed=false&fields=files(id,name,mimeType)&key=${apiKey}`;
 
