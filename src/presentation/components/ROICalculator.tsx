@@ -1,8 +1,8 @@
 // src/presentation/components/ROICalculator.tsx
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Calculator, TrendingDown, TrendingUp, Clock, DollarSign,
   Users, Car, Shield, ChevronRight, X, Download,
@@ -189,24 +189,25 @@ const SliderRow = ({ label, icon: Icon, hint, value, min, max, step, onChange, f
   <div>
     <div className="flex items-center gap-1.5 mb-1">
       <Icon size={13} style={{ color: C.orange }} />
-      <label className="text-xs font-semibold" style={{ color: C.inkMid }}>{label}</label>
+      <label className="text-xs font-semibold" style={{ color: C.navy800 }}>{label}</label>
     </div>
     {hint && <p className="text-[11px] mb-1.5 ml-4" style={{ color: C.ink400 }}>{hint}</p>}
     <div className="flex items-center gap-3 ml-4">
       <input type="range" min={min} max={max} step={step} value={value}
         onChange={e => onChange(Number(e.target.value))} className="flex-1 accent-orange-500 h-1.5 cursor-pointer" />
-      <span className="hn text-sm font-black text-right whitespace-nowrap" style={{ color: C.ink, minWidth: 110 }}>{fmt(value)}</span>
+      <span className="hn text-sm font-black text-right whitespace-nowrap" style={{ color: C.navy900, minWidth: 110 }}>{fmt(value)}</span>
     </div>
   </div>
 );
 
 const KPI = ({ icon: Icon, label, value, sub, variant = "default" }: any) => {
-  const V: any = {
-    default: { bg: C.white, bd: C.border, val: C.ink, lbl: C.ink400 },
-    positive: { bg: "#f0fdf4", bd: "#86efac", val: "#15803d", lbl: C.green },
+  const variants = {
+    default: { bg: C.light100, bd: C.bLight, val: C.navy900, lbl: C.ink400 },
+    positive: { bg: "#f0fdf4", bd: "#86efac", val: "#15803d", lbl: "#10b981" },
     highlight: { bg: C.orangeL, bd: C.orange, val: C.orangeD, lbl: C.orange },
-    dark: { bg: C.navy, bd: C.navyLight, val: "#fff", lbl: C.ink300 },
-  }[variant];
+    dark: { bg: C.navy900, bd: "rgba(255,255,255,0.07)", val: "#fff", lbl: C.ink300 },
+  };
+  const V = variants[variant as keyof typeof variants] || variants.default;
   return (
     <div className="rounded-xl p-4 border" style={{ background: V.bg, borderColor: V.bd }}>
       <Icon size={14} className="mb-1.5" style={{ color: variant === "dark" ? C.orange : V.lbl }} />
@@ -243,6 +244,7 @@ const GraficoProjecao = ({ beneficio, investimento, opAnual }: any) => {
   };
 
   const paybackA = beneficio > opAnual ? investimento / (beneficio - opAnual) : null;
+  const greenColor = "#10b981";
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ overflow: "visible" }}>
@@ -258,8 +260,8 @@ const GraficoProjecao = ({ beneficio, investimento, opAnual }: any) => {
       {paybackA && paybackA <= 5 && paybackA >= 0 && (
         <>
           <line x1={tX(paybackA)} y1={PT} x2={tX(paybackA)} y2={PT + cH}
-            stroke={C.green} strokeWidth="0.6" strokeDasharray="1,1" />
-          <text x={tX(paybackA) + 0.8} y={PT + 4} fontSize="2.8" fill={C.green} fontWeight="700">Payback</text>
+            stroke={greenColor} strokeWidth="0.6" strokeDasharray="1,1" />
+          <text x={tX(paybackA) + 0.8} y={PT + 4} fontSize="2.8" fill={greenColor} fontWeight="700">Payback</text>
         </>
       )}
       {saldos.map((v, i) => (
@@ -298,9 +300,9 @@ const BreakdownBar = ({ items }: any) => {
                 <Icon size={11} style={{ color: it.color }} />
                 <span className="font-medium">{it.label}</span>
               </div>
-              <span className="text-xs font-bold" style={{ color: C.ink }}>{fmt(it.value)}</span>
+              <span className="text-xs font-bold" style={{ color: C.navy900 }}>{fmt(it.value)}</span>
             </div>
-            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: C.bgAlt }}>
+            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: C.light200 }}>
               <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }}
                 transition={{ duration: 0.9, delay: i * 0.1, ease: "easeOut" }}
                 className="h-full rounded-full" style={{ background: it.color }} />
@@ -318,7 +320,8 @@ interface ROICalculatorProps {
   hideSelector?: boolean;
 }
 
-export const ROICalculator: React.FC<ROICalculatorProps> = ({ initialSegment, hideSelector = false }) => {
+// Componente interno que utiliza useSearchParams (precisa de Suspense)
+const ROICalculatorInner: React.FC<ROICalculatorProps> = ({ initialSegment, hideSelector = false }) => {
   const searchParams = useSearchParams();
   const nivelParam = searchParams.get("nivel") as Nivel | null;
   const capacidadeParam = searchParams.get("capacidade") as Capacidade | null;
@@ -346,6 +349,7 @@ export const ROICalculator: React.FC<ROICalculatorProps> = ({ initialSegment, hi
   const [loading, setLoading] = useState(false);
   const [produtoRecomendado, setProdutoRecomendado] = useState<Product | null>(null);
 
+  // useEffect com dependências mais específicas para evitar warnings
   useEffect(() => {
     setNumPessoas(cfg.numDefault);
     setCustoPessoa(cfg.pessoalDefault);
@@ -356,7 +360,18 @@ export const ROICalculator: React.FC<ROICalculatorProps> = ({ initialSegment, hi
     setArea(cfg.areaDefault);
     setReducao(cfg.reducaoDefault);
     setEficiencia(cfg.eficienciaDefault);
-  }, [setor]);
+  }, [
+    setor,
+    cfg.numDefault,
+    cfg.pessoalDefault,
+    cfg.veiculoDefault,
+    cfg.perdasDefault,
+    cfg.contratoDefault,
+    cfg.inspecaoDefault,
+    cfg.areaDefault,
+    cfg.reducaoDefault,
+    cfg.eficienciaDefault,
+  ]);
 
   const INV = 205000;
   const OP_MES = 1500;
@@ -433,11 +448,11 @@ export const ROICalculator: React.FC<ROICalculatorProps> = ({ initialSegment, hi
   };
 
   return (
-    <div style={{ background: C.bg, minHeight: "100vh" }}>
+    <div style={{ background: C.light200, minHeight: "100vh" }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <div className="text-center mb-10">
           <Tag label="Análise de Valor Operacional" />
-          <h1 className="hn text-3xl sm:text-4xl font-black" style={{ color: C.ink }}>
+          <h1 className="hn text-3xl sm:text-4xl font-black" style={{ color: C.navy900 }}>
             Quanto custa <span style={{ color: C.orange }}>não ter autonomia aérea?</span>
           </h1>
         </div>
@@ -451,11 +466,11 @@ export const ROICalculator: React.FC<ROICalculatorProps> = ({ initialSegment, hi
                 <button key={s.id} onClick={() => setSetor(s.id)}
                   className="rounded-xl p-3.5 border text-left transition-all"
                   style={{
-                    background: isActive ? C.navy : C.white,
-                    borderColor: isActive ? C.orange : C.border,
+                    background: isActive ? C.navy900 : C.light100,
+                    borderColor: isActive ? C.orange : C.bLight,
                   }}>
                   <Icon size={14} className="mb-1.5" style={{ color: isActive ? C.orange : C.ink400 }} />
-                  <div className="text-[11px] font-black leading-tight" style={{ color: isActive ? "#fff" : C.ink }}>{s.label}</div>
+                  <div className="text-[11px] font-black leading-tight" style={{ color: isActive ? "#fff" : C.navy900 }}>{s.label}</div>
                   <div className="text-[10px] mt-0.5" style={{ color: isActive ? C.ink300 : C.ink400 }}>{s.desc}</div>
                 </button>
               );
@@ -464,13 +479,13 @@ export const ROICalculator: React.FC<ROICalculatorProps> = ({ initialSegment, hi
         )}
 
         <div className="grid lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-2xl p-6 border" style={{ borderColor: C.border }}>
-            <h3 className="hn font-black text-lg mb-4">Dados da operação</h3>
+          <div className="bg-white rounded-2xl p-6 border" style={{ borderColor: C.bLight }}>
+            <h3 className="hn font-black text-lg mb-4" style={{ color: C.navy900 }}>Dados da operação</h3>
             <div className="space-y-5">
               <div>
                 <div className="flex items-center gap-1.5 mb-2">
                   <Users size={13} style={{ color: C.orange }} />
-                  <label className="text-xs font-semibold">Número de {cfg.pessoalUnidade}</label>
+                  <label className="text-xs font-semibold" style={{ color: C.navy900 }}>Número de {cfg.pessoalUnidade}</label>
                 </div>
                 <div className="flex items-center gap-3 ml-4">
                   <input type="range" min={1} max={Math.min(cfg.numMax, 500)} step={1} value={Math.min(numPessoas, 500)}
@@ -497,7 +512,7 @@ export const ROICalculator: React.FC<ROICalculatorProps> = ({ initialSegment, hi
                   onChange={setInspecao} fmt={fmtM} />
               </div>
               <div>
-                <label className="text-xs font-semibold mb-1 block">{cfg.areaLabel}</label>
+                <label className="text-xs font-semibold mb-1 block" style={{ color: C.navy900 }}>{cfg.areaLabel}</label>
                 <input type="number" value={area} onChange={e => setArea(Math.max(0, Number(e.target.value)))}
                   className="w-full px-3 py-2 rounded-xl border" />
                 <div className="text-[11px] mt-1 text-orange-600">~{voosArea} voos/ciclo</div>
@@ -531,7 +546,7 @@ export const ROICalculator: React.FC<ROICalculatorProps> = ({ initialSegment, hi
                 {!leadOk ? (
                   <>
                     <div className="flex justify-between items-center mb-4">
-                      <h3 className="hn text-xl font-black">Receba a análise</h3>
+                      <h3 className="hn text-xl font-black" style={{ color: C.navy900 }}>Receba a análise</h3>
                       <button onClick={() => setShowLead(false)}><X size={16} /></button>
                     </div>
                     <form onSubmit={handleLeadSubmit} className="space-y-3">
@@ -552,7 +567,7 @@ export const ROICalculator: React.FC<ROICalculatorProps> = ({ initialSegment, hi
                 ) : (
                   <div className="text-center py-6">
                     <Check size={48} className="mx-auto text-green-500 mb-3" />
-                    <h3 className="text-xl font-black">Recebemos sua solicitação!</h3>
+                    <h3 className="text-xl font-black" style={{ color: C.navy900 }}>Recebemos sua solicitação!</h3>
                     <p className="text-sm text-gray-500 mt-2">Um especialista entrará em contato em até 24h.</p>
                     {produtoRecomendado && (
                       <RecomendacaoProduto produto={produtoRecomendado} fromSegment={setor} />
@@ -570,3 +585,14 @@ export const ROICalculator: React.FC<ROICalculatorProps> = ({ initialSegment, hi
     </div>
   );
 };
+
+// Exporta o componente envolto em Suspense (obrigatório para useSearchParams no Next.js App Router)
+export const ROICalculator: React.FC<ROICalculatorProps> = (props) => (
+  <Suspense fallback={
+    <div className="flex items-center justify-center min-h-[200px]">
+      <div className="animate-pulse text-sm text-slate-400">Carregando calculadora...</div>
+    </div>
+  }>
+    <ROICalculatorInner {...props} />
+  </Suspense>
+);

@@ -24,7 +24,8 @@ const LazyImage: FC<{ src: string; alt: string; className?: string }> = ({ src, 
     <div className="relative w-full h-full bg-gray-100">
       {!loaded && !error && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-200 animate-pulse">
-          <div className="w-6 h-6 border-3 border-orange-500 border-t-transparent rounded-full animate-spin" />
+          {/* Classe border-[3px] substitui border-3 (inválida) */}
+          <div className="w-6 h-6 border-[3px] border-orange-500 border-t-transparent rounded-full animate-spin" />
         </div>
       )}
       {error && (
@@ -189,7 +190,8 @@ export const GaleriaAero: FC = () => {
       opacity: 1,
       scale: 1,
       rotate: 0,
-      transition: { type: "spring", stiffness: 300, damping: 25 }
+      // CORREÇÃO: type: "spring" como literal
+      transition: { type: "spring" as const, stiffness: 300, damping: 25 }
     },
     exit: (direction: number) => ({
       x: direction > 0 ? -300 : 300,
@@ -205,7 +207,7 @@ export const GaleriaAero: FC = () => {
     return (
       <section id="galeria" className="py-14 sm:py-24" style={{ background: C.light200 }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
-          <div className="w-10 h-10 mx-auto border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-10 h-10 mx-auto border-[3px] border-orange-500 border-t-transparent rounded-full animate-spin" />
           <p className="mt-4 text-ink-500">Carregando galeria...</p>
         </div>
       </section>
@@ -255,7 +257,7 @@ export const GaleriaAero: FC = () => {
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 400, damping: 20 }}
+              transition={{ type: "spring" as const, stiffness: 400, damping: 20 }}
               className="absolute top-6 right-6 z-30 p-3 rounded-full bg-white/10 text-white backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-all group"
               onClick={closeModal}
               aria-label="Fechar"

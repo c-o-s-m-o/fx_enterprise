@@ -988,19 +988,22 @@ const ProjecaoChart = ({
             tickLine={false}
           />
           <Tooltip
-            formatter={(value: number) =>
-              value.toLocaleString("pt-BR", {
-                style: "currency",
-                currency: "BRL",
-              })
-            }
-            contentStyle={{
-              borderRadius: "8px",
-              border: "1px solid #e2e8f0",
-              fontSize: "12px",
-              boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-            }}
-          />
+  formatter={(value) => {
+    if (value == null) return "";
+    const num = typeof value === "number" ? value : Number(value);
+    if (isNaN(num)) return "";
+    return num.toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    });
+  }}
+  contentStyle={{
+    borderRadius: "8px",
+    border: "1px solid #e2e8f0",
+    fontSize: "12px",
+    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+  }}
+/>
           <ReferenceLine y={0} stroke="#94a3b8" strokeDasharray="3 3" />
           {paybackYear && paybackYear <= 5 && paybackYear >= 0 && (
             <ReferenceLine
