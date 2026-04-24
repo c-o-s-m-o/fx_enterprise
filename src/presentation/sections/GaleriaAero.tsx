@@ -24,7 +24,7 @@ const LazyImage: FC<{ src: string; alt: string; className?: string }> = ({ src, 
     <div className="relative w-full h-full bg-gray-100">
       {!loaded && !error && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-200 animate-pulse">
-          {/* Classe border-[3px] substitui border-3 (inválida) */}
+          {/* Substituído border-3 por border-[3px] */}
           <div className="w-6 h-6 border-[3px] border-orange-500 border-t-transparent rounded-full animate-spin" />
         </div>
       )}
@@ -53,7 +53,7 @@ export const GaleriaAero: FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [carouselIndex, setCarouselIndex] = useState(0);
-  const [direction, setDirection] = useState(0); // Para animações direcionais no modal
+  const [direction, setDirection] = useState(0);
 
   const itemsPerView = 4;
   const maxCarouselIndex = Math.max(0, galleryItems.length - itemsPerView);
@@ -70,7 +70,7 @@ export const GaleriaAero: FC = () => {
     };
   }, [selectedIndex]);
 
-  // Busca dados da API
+  // Busca dados da API (agora estática)
   useEffect(() => {
     const fetchGallery = async () => {
       try {
@@ -104,7 +104,6 @@ export const GaleriaAero: FC = () => {
     }
   }, [carouselIndex, maxCarouselIndex]);
 
-  // Navegação do modal com direção para animação
   const navigate = useCallback((newIndex: number, dir: number) => {
     setDirection(dir);
     setSelectedIndex(newIndex);
@@ -131,14 +130,10 @@ export const GaleriaAero: FC = () => {
 
   const closeModal = () => setSelectedIndex(null);
 
-  // Suporte a gestos de arraste (swipe) no modal
   const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     const swipe = info.offset.x;
-    if (swipe < -100) {
-      handleNext();
-    } else if (swipe > 100) {
-      handlePrevious();
-    }
+    if (swipe < -100) handleNext();
+    else if (swipe > 100) handlePrevious();
   };
 
   // Eventos de teclado
@@ -162,7 +157,7 @@ export const GaleriaAero: FC = () => {
             const item = galleryItems[idx];
             if (item.type === 'image') {
               const img = new Image();
-              img.src = `https://drive.google.com/thumbnail?id=${item.id}&sz=w1600`;
+              img.src = item.thumb;
             }
           }
         });
@@ -171,7 +166,7 @@ export const GaleriaAero: FC = () => {
     }
   }, [selectedIndex, galleryItems]);
 
-  // Variantes de animação para o modal e conteúdo
+  // Variantes de animação
   const modalVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { duration: 0.3 } },
@@ -190,7 +185,7 @@ export const GaleriaAero: FC = () => {
       opacity: 1,
       scale: 1,
       rotate: 0,
-      // CORREÇÃO: type: "spring" como literal
+      // Corrigido: tipo da animação explicitamente como "spring"
       transition: { type: "spring" as const, stiffness: 300, damping: 25 }
     },
     exit: (direction: number) => ({
@@ -240,7 +235,7 @@ export const GaleriaAero: FC = () => {
 
   return (
     <>
-      {/* MODAL FULLSCREEN COM ANIMAÇÕES CRIATIVAS */}
+      {/* MODAL FULLSCREEN */}
       <AnimatePresence custom={direction}>
         {selectedItem && (
           <motion.div
@@ -252,7 +247,7 @@ export const GaleriaAero: FC = () => {
             style={{ backdropFilter: 'blur(12px)', backgroundColor: 'rgba(0,0,0,0.85)' }}
             onClick={closeModal}
           >
-            {/* Botão Fechar estilizado */}
+            {/* Botão Fechar */}
             <motion.button
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -291,7 +286,7 @@ export const GaleriaAero: FC = () => {
               </>
             )}
 
-            {/* Conteúdo da mídia com arraste e animações direcionais */}
+            {/* Conteúdo da mídia */}
             <motion.div
               key={selectedItem.id}
               custom={direction}
@@ -308,10 +303,10 @@ export const GaleriaAero: FC = () => {
             >
               {selectedItem.type === 'image' ? (
                 <img
-                  src={`https://drive.google.com/thumbnail?id=${selectedItem.id}&sz=w1600`}
+                  src={selectedItem.src}  // Agora usa a URL fornecida pela API (imgBB)
                   alt={selectedItem.title}
                   className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
-                  style={{ pointerEvents: 'none' }} // Evita interferência no drag
+                  style={{ pointerEvents: 'none' }}
                 />
               ) : (
                 <iframe
@@ -323,7 +318,7 @@ export const GaleriaAero: FC = () => {
               )}
             </motion.div>
 
-            {/* Indicador de posição (bolinhas) */}
+            {/* Indicador de posição */}
             {galleryItems.length > 1 && (
               <motion.div
                 initial={{ y: 20, opacity: 0 }}
